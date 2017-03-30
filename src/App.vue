@@ -4,7 +4,7 @@
         <h1>{{ item.name }}</h1>
       </span>
     </div>
-    <navc :items="items"></navc>
+    <navc :options="options"></navc>
   </div>
 </template>
 
@@ -47,8 +47,9 @@ export default {
       let options = {
         offset: 100,
         data: this.data,
-        backToTop: 0
+        offsetTop: 0
       }
+      return options
     }
   }
 }

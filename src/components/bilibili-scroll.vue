@@ -7,7 +7,7 @@
 			</div>
 		</transition>
 		<div class="nav-list">
-			<div class="n-i sotrable" :class="{on: current===index}" v-for="(item, index) in items">
+			<div class="n-i sotrable" :class="{on: current===index}" v-for="(item, index) in items" @click="setEnable(index)">
 				<div class="name">{{item.name}}</div>
 			</div>
 			<div class="n-i customize">
@@ -23,7 +23,9 @@
 </template>
 
 <script>
+import scrollMixin from './smooth-scroll.js'
 export default {
+	mixins: [scrollMixin],
 	data() {
 		return {
 			current: 0
@@ -32,6 +34,15 @@ export default {
 	props: {
 		items: {
 			type: Array
+		}
+	},
+	methods: {
+		setEnable(index) {
+			if (index === this.current) {
+				return false
+			}
+			this.current = index
+
 		}
 	}
 }
