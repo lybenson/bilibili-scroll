@@ -1,5 +1,5 @@
 <template>
-	<div class="navt">
+	<div class="nav-side">
 		<transition>
 			<div>
 				<div class="tip"></div>
@@ -7,7 +7,7 @@
 			</div>
 		</transition>
 		<div class="nav-list">
-			<div class="n-i sotrable" :class="{on: current===index}" v-for="(item, index) in items" @click="setEnable(index)">
+			<div class="n-i sotrable" :class="{on: current===index}" v-for="(item, index) in data" @click="setEnable(index)">
 				<div class="name">{{item.name}}</div>
 			</div>
 			<div class="n-i customize">
@@ -28,28 +28,77 @@ export default {
 	mixins: [scrollMixin],
 	data() {
 		return {
-			current: 0
+			current: 0,
+			data: [],
+			time: 800
 		}
 	},
 	props: {
-		items: {
-			type: Array
+		options: {
+			type: Object
 		}
 	},
+	mounted() {
+		this.init()
+	},
 	methods: {
+		init() {
+			console.log('初始化数据')
+			this.initData()
+		},
+		initData() {
+			console.log('initData')
+			console.log(this.options.items)
+			this.data = Array.from(this.options.items, (d) => {
+				console.log('单个元素为'+JSON.stringify(d))
+				let element = document.getElementById(`b_${d.desc}`)
+				if (!element) {
+
+					return
+				}
+				let offsetTop = this.getOffsetTop(element)
+				console.log(offsetTop)
+				return {
+					name: d.name,
+					element: element,
+					offsetTop: offsetTop,
+					height: element.offsetHeight
+				}
+			}) 
+		},
 		setEnable(index) {
 			if (index === this.current) {
 				return false
 			}
 			this.current = index
-
+			let target = this.data[index].element
+			this.scrollToElem(target, this.time, this.offset || 0).then(() => {
+				// this.queueNumber--
+				// if (this.queueNumber === 0) {
+				// 	this.isClickScroll = false
+				// }
+			})
+		},
+		//获取元素距离顶部的距离
+		getOffsetTop(element) {
+			var top, clientTop, clientLeft, scrollTop, scrollLeft,
+			doc = document.documentElement,
+			body = document.body;
+			if (typeof element.getBoundingClientRect !== "undefined") {
+				top = element.getBoundingClientRect().top;
+			} else {
+				top = 0;
+			}
+			clientTop = doc.clientTop || body.clientTop || 0;
+			scrollTop = window.pageYOffset || doc.scrollTop;
+			return (top + scrollTop - clientTop);
 		}
 	}
 }
 </script>
 
 <style lang="stylus" scoped>
-	.navt
+	.nav-side
 		position fixed
 		width 48px
 		text-align center

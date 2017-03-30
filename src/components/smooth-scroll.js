@@ -40,6 +40,7 @@ const scrollToTop = (time) => {
 
 //  滚动到某元素
 const scrollToElem = (elem, time, offset) => {
+	console.log('elem:' + elem)
 	let top = elem.getBoundingClientRect().top  + ( window.pageYOffset || document.documentElement.scrollTop )  - ( document.documentElement.clientTop || 0 )
 	return scrollTo(top - (offset || 0), time)
 }

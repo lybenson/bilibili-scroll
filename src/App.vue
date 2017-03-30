@@ -4,17 +4,17 @@
         <h1>{{ item.name }}</h1>
       </span>
     </div>
-    <navc :options="options"></navc>
+    <NavSide :options="options"></NavSide>
   </div>
 </template>
 
 <script>
-import navc from './components/bilibili-scroll'
+import NavSide from './components/NavSide'
 
 export default {
   name: 'app',
   components: {
-    navc
+    NavSide
   },
   data() {
     return {
@@ -45,9 +45,9 @@ export default {
   computed: {
     options() {
       let options = {
-        offset: 100,
-        data: this.data,
-        offsetTop: 0
+        offset: 100, //偏移的距离
+        items: this.items, 
+        offsetTop: 0 //距离顶部距离
       }
       return options
     }
