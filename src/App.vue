@@ -1,10 +1,11 @@
 <template>
   <div id="app">
+    <div style="background-color: red; width: 100%; height: 500px;"></div>
     <div class="container-row" v-for="(item, index) in items" :id="'b_' + item.desc">
         <h1>{{ item.name }}</h1>
       </span>
     </div>
-    <NavSide :options="options"></NavSide>
+    <NavSide :options="options" style="z-index: 10000;"></NavSide>
   </div>
 </template>
 
@@ -64,7 +65,7 @@ export default {
 
 .container-row {
   width: 100%;
-  height: 200px;
+  height: 400px;
   font: 30px;
   margin-bottom: 20px;
   background-color: green;
