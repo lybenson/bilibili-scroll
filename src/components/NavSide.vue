@@ -56,7 +56,7 @@ export default {
 		},
 				/*  绑定事件  */
 		bindEvent() {
-			document.addEventListener('scroll', this.scroll, false) //文档对象加滚动
+			// document.addEventListener('scroll', this.scroll, false) //文档对象加滚动
 			document.addEventListener('mousemove', this.dragMove, false)
 			document.addEventListener('mouseup', this.dragEnd, false)
 			document.addEventListener('mouseleave', this.dragEnd, false)
@@ -139,7 +139,7 @@ export default {
 		},
 		/*  排序拖拽结束  */
 		dragEnd(e) {
-			// console.log('mouseleave事件')
+			console.log('mouseleave事件')
 			// if (this.isDrag) {
 			// 	this.isDrag = false
 			// 	if (this.exchangeId !== this.dragId) {
