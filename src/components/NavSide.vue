@@ -6,18 +6,30 @@
 				<div class="custom-bg"></div>
 			</div>
 		</transition>
-		<div class="nav-list">
-			<div class="n-i sotrable" :class="{on: current===index}" v-for="(item, index) in data" @click="setEnable(index)" @mousedown="dragStart($event, index)">
-				<div class="name">{{item.name}}</div>
-			</div>
+		<div class="nav-list" ref="list">
+			<template v-for="(item, index) in data">
+				<div v-if="isDrag && index === replaceItem && replaceItem <= dragId" class="n-i sotrable">
+					<div class="name"></div>
+				</div>
+				<div class="n-i sotrable" :class="[{'on': current===index && !isSort}, {'drag': isDrag && current === index}]"  @click="setEnable(index)" @mousedown="dragStart($event, index)" :style="dragStyles">
+					<div class="name">{{item.name}}</div>
+				</div>
+				<div v-if="isDrag && index === replaceItem && replaceItem > dragId" class="n-i sotrable">
+					<div class="name"></div>
+				</div>
+			</template>
+			<li v-if="isDrag && replaceItem === data.length" :class="['sortable-item']">
+				<div class="sortable-item-name"></div>
+			</li>
+
 			<div class="n-i customize" @click="sort">
 				<i class="n-icon-sort"></i>
 				<p>排序</p>
 			</div>
 		</div>
-		<div class="n-i gotop">
+		<div class="n-i gotop" >
 			<div class="s-line"></div>
-			<div class="btn_gotop"></div>
+			<div class="btn_gotop" @click="scrollToTop(time)"></div>
 		</div>
 	</div>
 </template>
@@ -28,16 +40,18 @@ export default {
 	mixins: [scrollMixin],
 	data() {
 		return {
-			current: 0,
-			data: [],
-			time: 800,
-			isSort: false,
-			dragId: 0, //拖拽元素id (0-..)
+			current: 0, //当前选中条目的序号
+			data: [], //数据(name,element,offsetTop,height)
+			time: 800, //动画时间
+			height: 32, //单个元素的高度
+			isSort: false, //排序模式
+			scrollTop: 0, //距离页面的顶部距离
+			dragId: 0, //拖拽元素序号
 			isDrag: false,  //当前是否在拖拽
-			offsetX: 0,
-			offsetY: 0,
-			x: 0,
-			y: 0
+			offsetX: 0, //鼠标在要拖拽的元素上的X坐标上的偏移
+			offsetY: 0, //鼠标在要拖拽的元素上的Y坐标上的偏移
+			x: 0, //被拖拽的元素在其相对的元素上的X坐标上的偏移
+			y: 0  //被拖拽的元素在其相对的元素上的Y坐标上的偏移
 		}
 	},
 	props: {
@@ -45,36 +59,68 @@ export default {
 			type: Object
 		}
 	},
+	watch: {
+		//监听options的变化
+		options: {
+			deep: true,
+			handler(newVal, oldVal) {
+				this.initData()
+			}
+		}
+	},
+	computed: {
+		//  偏移值
+		offset() {
+			return this.options.offset || 100
+		},
+		// 拖拽的元素的position会变为absolute,dragStyles用来设置其位置,鼠标运动时会调用,从而实现跟随鼠标运动的功能
+		dragStyles() { 
+			return {
+				left: `${this.x}px`,
+				top: `${this.y}px`
+			}
+		},
+		//当被拖拽的元素运动到其他元素的位置时,会使得replaceItem发送变化
+		replaceItem() {
+			let id = Math.floor(this.y / this.height)
+			if (id > this.data.length - 1)
+				id = this.data.length
+			if (id < 0)
+				id = 0
+			return id
+		}
+	},
 	mounted() {
 		this.init()
 	},
 	methods: {
+		/** 初始化 */
 		init() {
-			console.log('初始化数据')
-			this.initData()
+			this.initData() //初始化
 			this.bindEvent()
+			this._screenHeight = window.screen.availHeight
+			this._left = this.$refs.list.getBoundingClientRect().left
+			this._top = this.$refs.list.getBoundingClientRect().top
 		},
-				/*  绑定事件  */
+		/** 绑定事件 */
 		bindEvent() {
-			// document.addEventListener('scroll', this.scroll, false) //文档对象加滚动
+			document.addEventListener('scroll', this.scroll, false) 
 			document.addEventListener('mousemove', this.dragMove, false)
 			document.addEventListener('mouseup', this.dragEnd, false)
 			document.addEventListener('mouseleave', this.dragEnd, false)
 		},
+		/** 初始化data */
 		initData() {
-			console.log('initData')
-			console.log(this.options.items)
-			this.data = Array.from(this.options.items, (d) => {
-				console.log('单个元素为'+JSON.stringify(d))
-				let element = document.getElementById(`b_${d.desc}`)
+			//将this.options.items转化成新的数组this.data
+			this.data = Array.from(this.options.items, (item) => {
+				let element = document.getElementById(item.id)
 				if (!element) {
-
+					console.error(`can not find element of name is ${item.id}`)
 					return
 				}
 				let offsetTop = this.getOffsetTop(element)
-				console.log(offsetTop)
 				return {
-					name: d.name,
+					name: item.name,
 					element: element,
 					offsetTop: offsetTop,
 					height: element.offsetHeight
@@ -88,67 +134,69 @@ export default {
 			this.current = index
 			let target = this.data[index].element
 			this.scrollToElem(target, this.time, this.offset || 0).then(() => {
-				// this.queueNumber--
-				// if (this.queueNumber === 0) {
-				// 	this.isClickScroll = false
-				// }
 			})
 		},
 		//获取元素距离顶部的距离
 		getOffsetTop(element) {
-			var top, clientTop, clientLeft, scrollTop, scrollLeft,
+			let top, clientTop, clientLeft, scrollTop, scrollLeft,
 			doc = document.documentElement,
-			body = document.body;
+			body = document.body
 			if (typeof element.getBoundingClientRect !== "undefined") {
 				top = element.getBoundingClientRect().top;
 			} else {
-				top = 0;
+				top = 0
 			}
-			clientTop = doc.clientTop || body.clientTop || 0;
-			scrollTop = window.pageYOffset || doc.scrollTop;
-			return (top + scrollTop - clientTop);
+			clientTop = doc.clientTop || body.clientTop || 0
+			scrollTop = window.pageYOffset || doc.scrollTop
+			return (top + scrollTop - clientTop)
 		},
+		//进入排序模式
 		sort() {
 			this.isSort = !this.isSort
 		},
-		/*  得到鼠标位置  */
+		/** 得到鼠标位置 */
 		getPos(e) {
 			this.x = e.clientX - this._left - this.offsetX
 			this.y = e.clientY - this._top - this.offsetY
 		},
-		/*  拖拽开始  */
+		/** 滚动事件 */
+		scroll(e) {
+			this.scrollTop = window.pageYOffset || (document.documentElement.scrollTop + document.body.scrollTop)
+			for (let i = 0; i < this.data.length; i++) {
+				if (this.scrollTop >= this.data[i].offsetTop - this.offset) {
+					this.current = i
+				}
+			}
+		},
+		/** 拖拽开始 */
 		dragStart(e, i) {
 			if (!this.isSort)
 				return false
+			this.current = i
 			this.isDrag = true
-			console.log(e)
 			this.dragId = i
 			this.offsetX = e.offsetX
 			this.offsetY = e.offsetY
 			this.getPos(e)
-			// console.log('拖拽开始')
 		},
-		/*  拖拽中得到鼠标位置  */
+		/** 拖拽中 */
 		dragMove(e) {
 			if (this.isDrag) {
-				console.log('获取鼠标位置')
 				this.getPos(e)
 			}
 			e.preventDefault()
-			// console.log('mousemove事件')
 		},
-		/*  排序拖拽结束  */
+		/** 拖拽结束 */
 		dragEnd(e) {
-			console.log('mouseleave事件')
-			// if (this.isDrag) {
-			// 	this.isDrag = false
-			// 	if (this.exchangeId !== this.dragId) {
-			// 		this.options.bindData.splice(this.exchangeId, 0, this.options.bindData.splice(this.dragId, 1)[0])
-			// 	}
-			// 	else {
-			// 		this.setActive(this.dragId, true)
-			// 	}
-			// }
+			if (this.isDrag) {
+				this.isDrag = false
+				if (this.replaceItem !== this.dragId) {
+					this.options.items.splice(this.replaceItem, 0, this.options.items.splice(this.dragId, 1)[0])
+				}
+				else {
+					this.setEnable(this.dragId, true)
+				}
+			}
 		}
 	}
 }
@@ -190,6 +238,12 @@ export default {
 						background url(../assets/icons.png) -663px -151px no-repeat
 						height 18px
 						width 18px
+				&.drag
+					position absolute
+					height 32px
+					width 100%
+					background-color #00a1d6
+					color #fff
 				.name
 					height 32px
 					line-height 32px

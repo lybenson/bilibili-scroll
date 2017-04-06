@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div style="background-color: red; width: 100%; height: 500px;"></div>
-    <div class="container-row" v-for="(item, index) in items" :id="'b_' + item.desc">
+    <div class="container-row" v-for="(item, index) in items" :id="item.id">
         <h1>{{ item.name }}</h1>
       </span>
     </div>
@@ -21,25 +21,25 @@ export default {
     return {
       items: [{
         name: '动画',
-        desc: 'douga',
+        id: 'b_douga'
       }, {
         name: '游戏',
-        desc: 'game',
+        id: 'b_game'
       }, {
         name: '音乐',
-        desc: 'music',
+        id: 'b_music'
       }, {
         name: '舞蹈',
-        desc: 'dance',
+        id: 'b_dance'
       }, {
         name: '科技',
-        desc: 'technology',
+        id: 'b_technology'
       }, {
         name: '生活',
-        desc: 'life',
+        id: 'b_life'
       }, {
         name: '电影',
-        desc: 'movie',
+        id: 'b_movie'
       }]
     }
   },
@@ -47,7 +47,7 @@ export default {
     options() {
       let options = {
         offset: 100, //偏移的距离
-        items: this.items, 
+        items: this.items,
         offsetTop: 0 //距离顶部距离
       }
       return options
