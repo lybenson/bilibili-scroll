@@ -43,6 +43,14 @@ export default {
       }]
     }
   },
+  watch: {
+    options() {
+      console.log('options 变化了')
+    },
+    items() {
+      console.log('items 变化了')
+    }
+  },
   computed: {
     options() {
       let options = {
